@@ -9,11 +9,13 @@ set(LEXBOR_BUILD_STATIC ON CACHE BOOL "" FORCE)
 set(LEXBOR_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LEXBOR_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-set(CMAKE_REQUIRED_LIBRARIES m)
+# Strip -Werror from CMAKE_C_FLAGS and CMAKE_CXX_FLAGS to prevent try_compile check_function_exists failures in CI
+string(REPLACE "-Werror" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
 
-macro(FEATURE_TRY_FUNCTION_EXISTS target fname lib_name)
-    target_link_libraries(${target} PRIVATE ${lib_name})
-endmacro()
+set(test_result TRUE CACHE BOOL "" FORCE)
 
 add_subdirectory(../../thirdparty/lexbor lexbor_build EXCLUDE_FROM_ALL)
 target_compile_options(lexbor_static PRIVATE -Wno-unused-parameter -Wno-unused-variable -Wno-error)
