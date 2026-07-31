@@ -15,6 +15,7 @@ android {
             cmake {
                 cppFlags += "-std=c++20"
                 cFlags += "-std=c17"
+                arguments += "-DCMAKE_BUILD_TYPE=MinSizeRel"
                 arguments += "-DANDROID_STL=c++_static"
                 arguments += "-DCMAKE_EXE_LINKER_FLAGS=-nostdlib++ -lc++_static -lc++abi"
                 arguments += "-DCMAKE_SHARED_LINKER_FLAGS=-nostdlib++ -lc++_static -lc++abi"
