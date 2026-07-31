@@ -6,6 +6,7 @@ import kotlin.system.measureTimeMillis
 class RegexBenchmark {
 
     @Test
+    @Suppress("UNUSED_VARIABLE")
     fun benchmarkRegex() {
         val patternStr = "([a-zA-Z]+) (\\d+)"
         val text = "user 123 ".repeat(1000)

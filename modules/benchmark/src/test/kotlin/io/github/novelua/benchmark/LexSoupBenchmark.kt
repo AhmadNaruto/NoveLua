@@ -7,6 +7,7 @@ import io.github.novelua.lexsoup.Parser
 class LexSoupBenchmark {
 
     @Test
+    @Suppress("UNUSED_VARIABLE")
     fun benchmarkLexSoup() {
         val htmlDoc = buildString {
             append("<html><body>")
@@ -18,7 +19,7 @@ class LexSoupBenchmark {
 
         try {
             // Test parsing speed
-            var doc: io.github.novelua.lexsoup.Document? = null
+            var doc: io.github.novelua.lexsoup.Document?
             val parseTime = measureTimeMillis {
                 doc = Parser.parse(htmlDoc)
             }
