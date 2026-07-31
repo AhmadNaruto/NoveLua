@@ -9,9 +9,11 @@ set(LEXBOR_BUILD_STATIC ON CACHE BOOL "" FORCE)
 set(LEXBOR_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LEXBOR_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-# Strip -Werror from CMAKE_C_FLAGS and CMAKE_CXX_FLAGS to prevent try_compile check_function_exists failures in CI
-string(REPLACE "-Werror" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+# Strip -Werror flags from CMAKE_C_FLAGS and CMAKE_CXX_FLAGS to prevent try_compile check_function_exists failures in CI
+string(REGEX REPLACE "-Werror=[a-zA-Z0-9_-]+" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+string(REGEX REPLACE "-Werror=[a-zA-Z0-9_-]+" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+string(REGEX REPLACE "-Werror" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+string(REGEX REPLACE "-Werror" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
 
