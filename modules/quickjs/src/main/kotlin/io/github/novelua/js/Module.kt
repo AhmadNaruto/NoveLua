@@ -7,6 +7,7 @@ class Module(val context: Context) {
     /**
      * Executes load.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun load(name: String) {
         // According to spec: Module load(name: String)
         // Usually loads a module by name. For QuickJS, this might involve evalModule or custom loader.

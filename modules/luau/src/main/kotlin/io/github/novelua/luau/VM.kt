@@ -37,16 +37,19 @@ class VM : Closeable, AutoCloseable {
     /**
      * Executes execute.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun execute(script: ByteArray) {}
 
     /**
      * Executes compile.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun compile(script: String): ByteArray = ByteArray(0)
 
     /**
      * Executes load.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun load(bytecode: ByteArray) {}
 
     /**
@@ -80,11 +83,13 @@ class VM : Closeable, AutoCloseable {
     /**
      * Executes getGlobal.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun getGlobal(name: String): Any? = null
 
     /**
      * Executes setGlobal.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun setGlobal(name: String, value: Any?) {}
 
     /**

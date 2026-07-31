@@ -16,6 +16,7 @@ class Thread : Closeable, AutoCloseable {
     /**
      * Executes resume.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun resume(vararg args: Any?) {}
     /**
      * Executes yield.

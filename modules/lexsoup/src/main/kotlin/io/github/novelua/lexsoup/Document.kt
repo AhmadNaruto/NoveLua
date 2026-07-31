@@ -72,6 +72,7 @@ class Document : Closeable, AutoCloseable {
     /**
      * Executes createElement.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun createElement(tag: String): Element = Element()
 
     override fun close() {
