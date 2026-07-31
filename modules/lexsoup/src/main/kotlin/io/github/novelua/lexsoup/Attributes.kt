@@ -2,6 +2,7 @@ package io.github.novelua.lexsoup
 /**
  * Represents Attributes.
  */
+@Suppress("UNUSED_PARAMETER")
 class Attributes {
     /**
      * Executes get.

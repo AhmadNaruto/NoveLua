@@ -23,6 +23,7 @@ object Parser {
      * @param url Remote or local URL string.
      */
     @JvmName("parseUrl")
+    @Suppress("UNUSED_PARAMETER")
     fun parseUrl(url: String): Document = Document()
 
     /**
@@ -30,5 +31,6 @@ object Parser {
      *
      * @param html HTML fragment content.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun parseFragment(html: String): Elements = Elements()
 }
