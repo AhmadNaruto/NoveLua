@@ -11,6 +11,10 @@ set(LEXBOR_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 set(CMAKE_REQUIRED_LIBRARIES m)
 
+macro(FEATURE_TRY_FUNCTION_EXISTS target fname lib_name)
+    target_link_libraries(${target} PRIVATE ${lib_name})
+endmacro()
+
 add_subdirectory(../../thirdparty/lexbor lexbor_build EXCLUDE_FROM_ALL)
 target_compile_options(lexbor_static PRIVATE -Wno-unused-parameter -Wno-unused-variable -Wno-error)
 
