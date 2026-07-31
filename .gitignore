@@ -1,0 +1,14 @@
+*.iml
+.gradle
+/build
+/app/build
+/modules/*/build
+.cxx
+local.properties
+.idea
+.DS_Store
+*.apk
+*.aar
+*.aab
+*.pyc
+__pycache__

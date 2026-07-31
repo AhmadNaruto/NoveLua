@@ -1,0 +1,12 @@
+[submodule "thirdparty/luau"]
+	path = thirdparty/luau
+	url = https://github.com/luau-lang/luau.git
+[submodule "thirdparty/quickjs"]
+	path = thirdparty/quickjs
+	url = https://github.com/bellard/quickjs.git
+[submodule "thirdparty/pcre2"]
+	path = thirdparty/pcre2
+	url = https://github.com/PCRE2Project/pcre2.git
+[submodule "thirdparty/lexbor"]
+	path = thirdparty/lexbor
+	url = https://github.com/lexbor/lexbor.git
