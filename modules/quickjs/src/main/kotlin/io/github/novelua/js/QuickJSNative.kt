@@ -17,6 +17,7 @@ internal object QuickJSNative {
     @JvmStatic external fun evalScript(handle: Long, script: String, isModule: Boolean): Long
     @JvmStatic external fun getGlobal(handle: Long, name: String): Long
     @JvmStatic external fun setGlobal(handle: Long, name: String, valueHandle: Long)
+    @JvmStatic external fun registerCallback(handle: Long, name: String, callback: JSCallback)
     
     @JvmStatic external fun createInt(handle: Long, value: Int): Long
     @JvmStatic external fun createDouble(handle: Long, value: Double): Long

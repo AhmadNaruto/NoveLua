@@ -1,6 +1,6 @@
 package io.github.novelua.lexsoup
 
-class Element internal constructor(internal val nativeHandle: Long) {
+class Element internal constructor(nativeHandle: Long) : Node(nativeHandle) {
     constructor() : this(0L)
 
     /**
@@ -37,12 +37,53 @@ class Element internal constructor(internal val nativeHandle: Long) {
      * Property outerHtml.
      */
     val outerHtml: String
-        get() = html
+        get() = outerHtml()
 
     /**
      * Executes attr.
      */
     fun attr(key: String): String = if (nativeHandle != 0L) nativeAttr(nativeHandle, key) else ""
+
+    fun attr(key: String, value: String): Element {
+        if (nativeHandle != 0L) nativeSetAttr(nativeHandle, key, value)
+        return this
+    }
+
+    fun hasAttr(key: String): Boolean = if (nativeHandle != 0L) nativeHasAttr(nativeHandle, key) else false
+
+    fun removeAttr(key: String) {
+        if (nativeHandle != 0L) nativeRemoveAttr(nativeHandle, key)
+    }
+
+    fun empty() {
+        if (nativeHandle != 0L) nativeEmpty(nativeHandle)
+    }
+
+    fun children(): Elements {
+        if (nativeHandle == 0L) return Elements()
+        val handles = nativeChildren(nativeHandle)
+        return Elements(handles.map { Element(it) })
+    }
+
+    fun child(index: Int): Element {
+        val h = if (nativeHandle != 0L) nativeChild(nativeHandle, index) else 0L
+        return if (h != 0L) Element(h) else Element(0L)
+    }
+
+    override fun parent(): Element? {
+        val h = if (nativeHandle != 0L) nativeParentElement(nativeHandle) else 0L
+        return if (h != 0L) Element(h) else null
+    }
+
+    fun next(): Element? {
+        val h = if (nativeHandle != 0L) nativeNext(nativeHandle) else 0L
+        return if (h != 0L) Element(h) else null
+    }
+
+    fun previous(): Element? {
+        val h = if (nativeHandle != 0L) nativePrevious(nativeHandle) else 0L
+        return if (h != 0L) Element(h) else null
+    }
 
     /**
      * Executes select.
@@ -68,6 +109,16 @@ class Element internal constructor(internal val nativeHandle: Long) {
     private external fun nativeHtml(handle: Long): String
     private external fun nativeAttr(handle: Long, key: String): String
     private external fun nativeSelect(handle: Long, css: String): LongArray
+    
+    private external fun nativeChildren(handle: Long): LongArray
+    private external fun nativeChild(handle: Long, index: Int): Long
+    private external fun nativeParentElement(handle: Long): Long
+    private external fun nativeNext(handle: Long): Long
+    private external fun nativePrevious(handle: Long): Long
+    private external fun nativeEmpty(handle: Long)
+    private external fun nativeHasAttr(handle: Long, key: String): Boolean
+    private external fun nativeRemoveAttr(handle: Long, key: String)
+    private external fun nativeSetAttr(handle: Long, key: String, value: String): Boolean
 
     companion object {
         init {

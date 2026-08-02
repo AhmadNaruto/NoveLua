@@ -1,15 +1,21 @@
-
 package io.github.novelua.luau
 
 /**
- * Represents Compiler.
+ * Compiles Luau source code.
  */
 class Compiler {
-    /**
-     * Executes compile.
-     */
-    @Suppress("UNUSED_PARAMETER")
     fun compile(source: String): ByteArray {
-        return ByteArray(0) // stub
+        return nativeCompile(source)
+    }
+
+    private external fun nativeCompile(source: String): ByteArray
+
+    companion object {
+        init {
+            try {
+                System.loadLibrary("novelua_luau")
+            } catch (_: Throwable) {
+            }
+        }
     }
 }

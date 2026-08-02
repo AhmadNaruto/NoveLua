@@ -5,8 +5,8 @@ import java.io.Closeable
 /**
  * Represents a Luau coroutine thread.
  */
-class Thread : Closeable, AutoCloseable {
-    private var nativeHandle: Long = 0
+class Thread internal constructor(internal var nativeHandle: Long) : Closeable, AutoCloseable {
+    constructor() : this(0L)
 
     /**
      * Property status.

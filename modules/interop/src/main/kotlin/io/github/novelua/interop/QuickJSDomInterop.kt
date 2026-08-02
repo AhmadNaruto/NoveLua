@@ -3,13 +3,30 @@ package io.github.novelua.interop
 import io.github.novelua.js.Context
 import io.github.novelua.lexsoup.Document
 import io.github.novelua.lexsoup.Element
+import io.github.novelua.lexsoup.Parser
+
+private fun escapeJSString(str: String): String {
+    return str.replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+}
 
 /**
  * Registers LexSoup HTML parsing into QuickJS Context.
  * Exposes global `parseHtml` helper in JavaScript scope.
  */
 fun Context.registerLexSoup() {
-    setGlobal("parseHtml", "registered")
+    registerCallback("parseHtml_internal") { args ->
+        if (args.isEmpty()) return@registerCallback "{}"
+        val html = args[0]
+        val doc = Parser.parse(html)
+        val title = escapeJSString(doc.title)
+        val innerHtml = escapeJSString(doc.html())
+        val text = escapeJSString(doc.text())
+        "{\"title\":\"$title\",\"html\":\"$innerHtml\",\"text\":\"$text\"}"
+    }
+    eval("function parseHtml(html) { return JSON.parse(parseHtml_internal(html)); }")
 }
 
 /**

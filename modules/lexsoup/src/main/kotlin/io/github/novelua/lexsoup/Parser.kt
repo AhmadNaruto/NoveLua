@@ -1,6 +1,7 @@
 package io.github.novelua.lexsoup
 
 import java.io.File
+import java.net.URL
 
 object Parser {
     /**
@@ -23,14 +24,15 @@ object Parser {
      * @param url Remote or local URL string.
      */
     @JvmName("parseUrl")
-    @Suppress("UNUSED_PARAMETER")
-    fun parseUrl(url: String): Document = Document()
+    fun parseUrl(url: String): Document = parse(URL(url).readText())
 
     /**
      * Parses an HTML fragment into Elements.
      *
      * @param html HTML fragment content.
      */
-    @Suppress("UNUSED_PARAMETER")
-    fun parseFragment(html: String): Elements = Elements()
+    fun parseFragment(html: String): Elements {
+        val doc = parse(html)
+        return doc.body.children()
+    }
 }

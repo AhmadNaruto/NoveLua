@@ -44,6 +44,10 @@ class Context(val runtime: Runtime) : AutoCloseable {
         }
     }
 
+    fun registerCallback(name: String, callback: JSCallback) {
+        QuickJSNative.registerCallback(nativeHandle, name, callback)
+    }
+
     internal fun toValue(value: Any?): Value {
         if (value is Value) return value
         

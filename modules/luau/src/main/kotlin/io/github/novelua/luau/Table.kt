@@ -3,44 +3,54 @@ package io.github.novelua.luau
 /**
  * Represents a Lua table.
  */
-class Table {
-    private var nativeHandle: Long = 0
+class Table internal constructor(internal var nativeHandle: Long) {
+    val size: Int
+        get() = if (nativeHandle != 0L) nativeSize(nativeHandle) else 0
 
-    /**
-     * Property size.
-     */
-    val size: Int = 0
+    fun get(key: Any): Any? = if (nativeHandle != 0L) nativeGet(nativeHandle, key) else null
 
-    /**
-     * Executes get.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    fun get(key: Any): Any? = null
-    /**
-     * Executes set.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    fun set(key: Any, value: Any?) {}
-    /**
-     * Executes remove.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    fun remove(key: Any) {}
-    /**
-     * Executes clear.
-     */
-    fun clear() {}
-    /**
-     * Executes contains.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    fun contains(key: Any): Boolean = false
-    /**
-     * Executes keys.
-     */
-    fun keys(): List<Any> = emptyList()
-    /**
-     * Executes values.
-     */
-    fun values(): List<Any> = emptyList()
+    fun set(key: Any, value: Any?) {
+        if (nativeHandle != 0L) nativeSet(nativeHandle, key, value)
+    }
+
+    fun remove(key: Any) {
+        if (nativeHandle != 0L) nativeRemove(nativeHandle, key)
+    }
+
+    fun clear() {
+        if (nativeHandle != 0L) nativeClear(nativeHandle)
+    }
+
+    fun contains(key: Any): Boolean = if (nativeHandle != 0L) nativeContains(nativeHandle, key) else false
+
+    fun keys(): List<Any> = if (nativeHandle != 0L) nativeKeys(nativeHandle) else emptyList()
+
+    fun values(): List<Any> = if (nativeHandle != 0L) nativeValues(nativeHandle) else emptyList()
+
+    @Suppress("deprecation")
+    protected fun finalize() {
+        if (nativeHandle != 0L) {
+            nativeDestroy(nativeHandle)
+            nativeHandle = 0L
+        }
+    }
+
+    private external fun nativeSize(handle: Long): Int
+    private external fun nativeGet(handle: Long, key: Any): Any?
+    private external fun nativeSet(handle: Long, key: Any, value: Any?)
+    private external fun nativeRemove(handle: Long, key: Any)
+    private external fun nativeClear(handle: Long)
+    private external fun nativeContains(handle: Long, key: Any): Boolean
+    private external fun nativeKeys(handle: Long): List<Any>
+    private external fun nativeValues(handle: Long): List<Any>
+    private external fun nativeDestroy(handle: Long)
+
+    companion object {
+        init {
+            try {
+                System.loadLibrary("novelua_luau")
+            } catch (_: Throwable) {
+            }
+        }
+    }
 }

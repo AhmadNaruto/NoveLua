@@ -25,6 +25,7 @@ dependencies {
     implementation(project(":modules:lexsoup"))
     implementation(project(":modules:luau"))
     implementation(project(":modules:quickjs"))
+    implementation(project(":modules:regex"))
 
     testImplementation(libs.junit)
 }

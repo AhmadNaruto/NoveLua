@@ -61,6 +61,14 @@ class Matcher internal constructor(
     }
 
     /**
+     * Returns the number of capturing groups in this matcher's pattern.
+     */
+    fun groupCount(): Int {
+        val match = currentMatch ?: return 0
+        return match.groups.maxOfOrNull { it.index } ?: 0
+    }
+
+    /**
      * Returns the start index of the previous match.
      */
     fun start(): Int {

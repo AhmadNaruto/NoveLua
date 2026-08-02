@@ -1,11 +1,11 @@
 package io.github.novelua.lexsoup
+
 /**
- * Represents Selector.
+ * Evaluates CSS selectors.
  */
-class Selector {
+object Selector {
     /**
      * Executes select.
      */
-    @Suppress("UNUSED_PARAMETER")
-    fun select(root: Element, css: String): Elements = Elements()
+    fun select(root: Element, css: String): Elements = root.select(css)
 }

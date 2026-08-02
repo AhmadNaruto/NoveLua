@@ -11,11 +11,11 @@ class VM : Closeable, AutoCloseable {
     /**
      * Property globals.
      */
-    val globals: Table = Table()
+    val globals: Table
     /**
      * Property registry.
      */
-    val registry: Table = Table()
+    val registry: Table
 
     /**
      * Property isClosed.
@@ -25,6 +25,8 @@ class VM : Closeable, AutoCloseable {
 
     init {
         nativeHandle = nativeCreate()
+        globals = Table(nativeGetGlobals(nativeHandle))
+        registry = Table(nativeGetRegistry(nativeHandle))
     }
 
     /**
@@ -37,20 +39,29 @@ class VM : Closeable, AutoCloseable {
     /**
      * Executes execute.
      */
-    @Suppress("UNUSED_PARAMETER")
-    fun execute(script: ByteArray) {}
+    fun execute(script: ByteArray) {
+        checkClosed()
+        load(script)
+        execute()
+    }
+
+    fun execute() {
+        checkClosed()
+        nativeExecute(nativeHandle)
+    }
 
     /**
      * Executes compile.
      */
-    @Suppress("UNUSED_PARAMETER")
-    fun compile(script: String): ByteArray = ByteArray(0)
+    fun compile(script: String): ByteArray = Compiler().compile(script)
 
     /**
      * Executes load.
      */
-    @Suppress("UNUSED_PARAMETER")
-    fun load(bytecode: ByteArray) {}
+    fun load(bytecode: ByteArray) {
+        checkClosed()
+        nativeLoad(nativeHandle, bytecode)
+    }
 
     /**
      * Executes eval.
@@ -68,29 +79,46 @@ class VM : Closeable, AutoCloseable {
     /**
      * Executes gc.
      */
-    fun gc() {}
+    fun gc() {
+        System.gc()
+    }
 
     /**
      * Executes createTable.
      */
-    fun createTable(): Table = Table()
+    fun createTable(): Table {
+        checkClosed()
+        return Table(nativeCreateTable(nativeHandle))
+    }
 
     /**
      * Executes createThread.
      */
-    fun createThread(): Thread = Thread()
+    fun createThread(): Thread {
+        checkClosed()
+        return Thread()
+    }
 
     /**
      * Executes getGlobal.
      */
-    @Suppress("UNUSED_PARAMETER")
-    fun getGlobal(name: String): Any? = null
+    fun getGlobal(name: String): Any? {
+        checkClosed()
+        return nativeGetGlobal(nativeHandle, name)
+    }
 
     /**
      * Executes setGlobal.
      */
-    @Suppress("UNUSED_PARAMETER")
-    fun setGlobal(name: String, value: Any?) {}
+    fun setGlobal(name: String, value: Any?) {
+        checkClosed()
+        nativeSetGlobal(nativeHandle, name, value)
+    }
+
+    fun registerCallback(name: String, callback: VMCallback) {
+        checkClosed()
+        nativeRegisterCallback(nativeHandle, name, callback)
+    }
 
     /**
      * Executes registerLibrary.
@@ -125,6 +153,14 @@ class VM : Closeable, AutoCloseable {
     private external fun nativeCreate(): Long
     private external fun nativeDestroy(handle: Long)
     private external fun nativeEval(handle: Long, script: String): String?
+    private external fun nativeLoad(handle: Long, bytecode: ByteArray)
+    private external fun nativeExecute(handle: Long)
+    private external fun nativeCreateTable(handle: Long): Long
+    private external fun nativeGetGlobal(handle: Long, name: String): Any?
+    private external fun nativeSetGlobal(handle: Long, name: String, value: Any?)
+    private external fun nativeGetGlobals(handle: Long): Long
+    private external fun nativeGetRegistry(handle: Long): Long
+    private external fun nativeRegisterCallback(handle: Long, name: String, callback: VMCallback)
 
     companion object {
         init {

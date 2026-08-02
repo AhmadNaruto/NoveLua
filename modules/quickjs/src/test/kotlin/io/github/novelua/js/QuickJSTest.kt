@@ -87,4 +87,21 @@ class QuickJSTest {
         } catch (_: UnsatisfiedLinkError) {
         }
     }
+
+    @Test
+    fun testCallbackRegistration() {
+        try {
+            Runtime().use { runtime ->
+                runtime.createContext().use { context ->
+                    context.registerCallback("sayHello") { args ->
+                        "Hello, " + args.firstOrNull()
+                    }
+                    val result = context.eval("sayHello('NoveLua')")
+                    assertEquals("Hello, NoveLua", result.asString())
+                    result.close()
+                }
+            }
+        } catch (_: UnsatisfiedLinkError) {
+        }
+    }
 }

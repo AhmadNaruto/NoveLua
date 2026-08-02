@@ -1,15 +1,17 @@
-
 #pragma once
 #include <lua.h>
+#include <lualib.h>
 
 namespace novelua::luau {
     class Function {
     public:
         Function(lua_State* L, int ref);
         ~Function();
-        void call();
+        lua_State* getState() const { return L; }
+        int getRef() const { return ref; }
+        void push() const;
     private:
-        [[maybe_unused]] lua_State* L;
-        [[maybe_unused]] int ref;
+        lua_State* L;
+        int ref;
     };
 }

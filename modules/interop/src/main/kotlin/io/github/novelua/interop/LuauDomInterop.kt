@@ -5,12 +5,28 @@ import io.github.novelua.lexsoup.Document
 import io.github.novelua.lexsoup.Element
 import io.github.novelua.lexsoup.Parser
 
+private fun escapeLuaString(str: String): String {
+    return str.replace("\\", "\\\\")
+        .replace("'", "\\'")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+}
+
 /**
  * Registers LexSoup HTML parsing into Luau VM.
  * Exposes global `parseHtml` helper in Luau state.
  */
 fun VM.registerLexSoup() {
-    setGlobal("parseHtml", "registered")
+    registerCallback("parseHtml_internal") { args ->
+        if (args.isEmpty()) return@registerCallback "{}"
+        val html = args[0]
+        val doc = Parser.parse(html)
+        val title = escapeLuaString(doc.title)
+        val innerHtml = escapeLuaString(doc.html())
+        val text = escapeLuaString(doc.text())
+        "{ title = '$title', html = '$innerHtml', text = '$text' }"
+    }
+    eval("function parseHtml(html) return loadstring('return ' .. parseHtml_internal(html))() end")
 }
 
 /**

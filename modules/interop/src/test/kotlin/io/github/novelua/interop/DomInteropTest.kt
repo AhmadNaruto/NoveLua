@@ -5,8 +5,7 @@ import io.github.novelua.js.Runtime
 import io.github.novelua.lexsoup.Document
 import io.github.novelua.lexsoup.Parser
 import io.github.novelua.luau.VM
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.junit.Assert.*
 import org.junit.Test
 
 class DomInteropTest {
@@ -31,6 +30,10 @@ class DomInteropTest {
                 
                 val elTable = vm.getGlobal("contentElement")
                 assertNotNull(elTable)
+
+                // Test live parseHtml helper
+                val parsedRes = vm.eval("return parseHtml('<html><title>Dynamic Title</title></html>').title")
+                assertEquals("Dynamic Title", parsedRes)
             }
         } catch (_: UnsatisfiedLinkError) {
         }
@@ -57,7 +60,33 @@ class DomInteropTest {
 
                     val elVal = context.getGlobal("contentElement")
                     assertNotNull(elVal)
+
+                    // Test live parseHtml helper
+                    val parsedVal = context.eval("parseHtml('<html><title>Dynamic Title</title></html>').title")
+                    assertEquals("Dynamic Title", parsedVal.asString())
+                    parsedVal.close()
                 }
+            }
+        } catch (_: UnsatisfiedLinkError) {
+        }
+    }
+
+    @Test
+    fun testLuauEngineInterop() {
+        try {
+            VM().use { vm ->
+                // Test Regex integration in Luau
+                vm.registerRegex()
+                val matchRes = vm.eval("local g = regex_match('hello 123 world', '\\\\d+'); return g[1]")
+                assertEquals("123", matchRes)
+
+                val replaceRes = vm.eval("return regex_replace('foo bar foo', 'foo', 'baz')")
+                assertEquals("baz bar baz", replaceRes)
+
+                // Test QuickJS integration in Luau
+                vm.registerQuickJS()
+                val jsRes = vm.eval("return eval_js('2 + 3')")
+                assertEquals("5.0", jsRes)
             }
         } catch (_: UnsatisfiedLinkError) {
         }

@@ -1,6 +1,6 @@
-
 #pragma once
 #include <lua.h>
+#include <lualib.h>
 #include <string>
 #include <vector>
 
@@ -9,8 +9,9 @@ namespace novelua::luau {
     public:
         Table(lua_State* L, int ref);
         ~Table();
-        void clear();
-        bool contains(const std::string& key);
+        lua_State* getState() const { return L; }
+        int getRef() const { return ref; }
+        void push() const;
     private:
         lua_State* L;
         int ref;

@@ -16,55 +16,36 @@ Selector::~Selector() {
     }
 }
 
-static bool MatchesSelector(Element el, const std::string& css) {
-    if (css.empty()) return false;
-    std::string tag = css;
-    std::string class_filter;
-    std::string id_filter;
+#include <lexbor/css/css.h>
 
-    size_t hash_pos = css.find('#');
-    size_t dot_pos = css.find('.');
-
-    if (hash_pos != std::string::npos) {
-        tag = css.substr(0, hash_pos);
-        id_filter = css.substr(hash_pos + 1);
-    } else if (dot_pos != std::string::npos) {
-        tag = css.substr(0, dot_pos);
-        class_filter = css.substr(dot_pos + 1);
-    }
-
-    if (!id_filter.empty() && el.Id() != id_filter) return false;
-    if (!class_filter.empty() && el.ClassName().find(class_filter) == std::string::npos) return false;
-
-    if (!tag.empty()) {
-        std::string elTag = el.TagName();
-        std::transform(elTag.begin(), elTag.end(), elTag.begin(), [](unsigned char c){ return std::tolower(c); });
-        std::transform(tag.begin(), tag.end(), tag.begin(), [](unsigned char c){ return std::tolower(c); });
-        if (elTag != tag) return false;
-    }
-
-    return true;
-}
-
-static void WalkTree(lxb_dom_node_t* node, const std::string& css, std::vector<Element>& results) {
-    if (!node) return;
-
-    if (node->type == LXB_DOM_NODE_TYPE_ELEMENT) {
-        Element el(node);
-        if (MatchesSelector(el, css)) {
-            results.push_back(el);
-        }
-    }
-
-    for (lxb_dom_node_t* child = node->first_child; child; child = child->next) {
-        WalkTree(child, css, results);
-    }
+static lxb_status_t find_callback(lxb_dom_node_t *node, lxb_css_selector_specificity_t spec, void *ctx) {
+    auto* results = static_cast<std::vector<Element>*>(ctx);
+    results->push_back(Element(node));
+    return LXB_STATUS_OK;
 }
 
 std::vector<Element> Selector::Select(Element root, const std::string& css) {
     std::vector<Element> results;
-    WalkTree(root.GetNativeNode(), css, results);
+    if (css.empty() || !root.GetNativeNode()) return results;
+
+    lxb_css_parser_t* parser = lxb_css_parser_create();
+    if (!parser) return results;
+
+    lxb_status_t status = lxb_css_parser_init(parser, NULL);
+    if (status != LXB_STATUS_OK) {
+        lxb_css_parser_destroy(parser, true);
+        return results;
+    }
+
+    lxb_css_selector_list_t* list = lxb_css_selectors_parse(parser, (const lxb_char_t*)css.c_str(), css.length());
+    if (list) {
+        lxb_selectors_find(m_selectors, root.GetNativeNode(), list, find_callback, &results);
+        lxb_css_selector_list_destroy(list, true);
+    }
+
+    lxb_css_parser_destroy(parser, true);
     return results;
 }
 
 }
+

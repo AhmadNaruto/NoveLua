@@ -16,11 +16,99 @@ static jlong Runtime_create(JNIEnv* env, jobject) {
 static void Runtime_destroy(JNIEnv*, jobject, jlong handle) { delete reinterpret_cast<Runtime*>(handle); }
 static void Runtime_gc(JNIEnv*, jobject, jlong handle) { if (handle) reinterpret_cast<Runtime*>(handle)->gc(); }
 
+#include <map>
+#include <mutex>
+#include <string>
+#include <vector>
+
+static std::map<std::string, jobject> g_qjs_callbacks;
+static std::mutex g_qjs_callbacks_mutex;
+static JavaVM* g_qjs_jvm = nullptr;
+
+static JSValue Qjs_callback_handler(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv, int magic, JSValue *data) {
+    JSValue name_val = data[0];
+    const char* name = JS_ToCString(ctx, name_val);
+    if (!name) return JS_EXCEPTION;
+
+    std::string key = std::to_string(reinterpret_cast<uintptr_t>(ctx)) + "_" + name;
+    JS_FreeCString(ctx, name);
+
+    jobject callback_obj = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_qjs_callbacks_mutex);
+        auto it = g_qjs_callbacks.find(key);
+        if (it != g_qjs_callbacks.end()) {
+            callback_obj = it->second;
+        }
+    }
+
+    if (!callback_obj) return JS_UNDEFINED;
+
+    JNIEnv* env = nullptr;
+    bool needs_detach = false;
+    jint get_env_res = g_qjs_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
+    if (get_env_res == JNI_EDETACHED) {
+        g_qjs_jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
+        needs_detach = true;
+    }
+
+    if (!env) return JS_UNDEFINED;
+
+    jclass stringClass = env->FindClass("java/lang/String");
+    jobjectArray argsArr = env->NewObjectArray(argc, stringClass, nullptr);
+    for (int i = 0; i < argc; ++i) {
+        size_t len;
+        const char* str = JS_ToCStringLen(ctx, &len, argv[i]);
+        jstring js = env->NewStringUTF(str ? str : "");
+        if (str) JS_FreeCString(ctx, str);
+        env->SetObjectArrayElement(argsArr, i, js);
+        env->DeleteLocalRef(js);
+    }
+
+    jclass callbackClass = env->GetObjectClass(callback_obj);
+    jmethodID callMethod = env->GetMethodID(callbackClass, "call", "([Ljava/lang/String;)Ljava/lang/String;");
+    if (!callMethod) {
+        if (needs_detach) g_qjs_jvm->DetachCurrentThread();
+        return JS_UNDEFINED;
+    }
+
+    jstring resStr = static_cast<jstring>(env->CallObjectMethod(callback_obj, callMethod, argsArr));
+
+    JSValue ret = JS_UNDEFINED;
+    if (resStr) {
+        const char* resChars = env->GetStringUTFChars(resStr, nullptr);
+        ret = JS_NewString(ctx, resChars);
+        env->ReleaseStringUTFChars(resStr, resChars);
+    }
+
+    if (needs_detach) g_qjs_jvm->DetachCurrentThread();
+    return ret;
+}
+
 static jlong Context_create(JNIEnv* env, jobject, jlong rtHandle) {
     try { return reinterpret_cast<jlong>(new Context(reinterpret_cast<Runtime*>(rtHandle))); }
     catch (...) { ThrowRuntimeException(env, "Failed to create Context"); return 0; }
 }
-static void Context_destroy(JNIEnv*, jobject, jlong handle) { delete reinterpret_cast<Context*>(handle); }
+
+static void Context_destroy(JNIEnv* env, jobject, jlong handle) {
+    auto* ctx = reinterpret_cast<Context*>(handle);
+    if (ctx) {
+        JSContext* c = ctx->get();
+        std::string prefix = std::to_string(reinterpret_cast<uintptr_t>(c)) + "_";
+        {
+            std::lock_guard<std::mutex> lock(g_qjs_callbacks_mutex);
+            for (auto it = g_qjs_callbacks.begin(); it != g_qjs_callbacks.end(); ) {
+                if (it->first.rfind(prefix, 0) == 0) {
+                    env->DeleteGlobalRef(it->second);
+                    it = g_qjs_callbacks.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+        }
+        delete ctx;
+    }
+}
 
 static jlong Context_eval(JNIEnv* env, jobject, jlong handle, jstring script, jboolean isModule) {
     try {
@@ -41,6 +129,33 @@ static void Context_setGlobal(JNIEnv* env, jobject, jlong handle, jstring name, 
         auto* val = reinterpret_cast<Value*>(valueHandle);
         ctx->setGlobal(ToStdString(env, name), JS_DupValue(ctx->get(), val->get()));
     } catch (...) { ThrowRuntimeException(env, "Failed to set global"); }
+}
+
+static void Context_registerCallback(JNIEnv* env, jobject, jlong handle, jstring jname, jobject callback) {
+    auto* ctx = reinterpret_cast<Context*>(handle);
+    if (!ctx) return;
+    JSContext* c = ctx->get();
+    std::string name = ToStdString(env, jname);
+
+    jobject global_callback = env->NewGlobalRef(callback);
+
+    std::string key = std::to_string(reinterpret_cast<uintptr_t>(c)) + "_" + name;
+    {
+        std::lock_guard<std::mutex> lock(g_qjs_callbacks_mutex);
+        auto it = g_qjs_callbacks.find(key);
+        if (it != g_qjs_callbacks.end()) {
+            env->DeleteGlobalRef(it->second);
+        }
+        g_qjs_callbacks[key] = global_callback;
+    }
+
+    JSValue global_obj = JS_GetGlobalObject(c);
+    JSValue name_val = JS_NewString(c, name.c_str());
+    JSValue func_val = JS_NewCFunctionData(c, Qjs_callback_handler, 1, 0, 1, &name_val);
+    JS_FreeValue(c, name_val);
+    
+    JS_SetPropertyStr(c, global_obj, name.c_str(), func_val);
+    JS_FreeValue(c, global_obj);
 }
 
 static jlong Context_createInt(JNIEnv*, jobject, jlong handle, jint value) {
@@ -162,6 +277,7 @@ static JNINativeMethod methods[] = {
     {"evalScript", "(JLjava/lang/String;Z)J", (void*)Context_eval},
     {"getGlobal", "(JLjava/lang/String;)J", (void*)Context_getGlobal},
     {"setGlobal", "(JLjava/lang/String;J)V", (void*)Context_setGlobal},
+    {"registerCallback", "(JLjava/lang/String;Lio/github/novelua/js/JSCallback;)V", (void*)Context_registerCallback},
     {"createInt", "(JI)J", (void*)Context_createInt},
     {"createDouble", "(JD)J", (void*)Context_createDouble},
     {"createBoolean", "(JZ)J", (void*)Context_createBoolean},
@@ -192,6 +308,7 @@ static JNINativeMethod methods[] = {
 };
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
+    g_qjs_jvm = vm;
     JNIEnv* env;
     if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) return JNI_ERR;
     jclass clazz = env->FindClass("io/github/novelua/js/QuickJSNative");
