@@ -27,65 +27,61 @@ class MainActivity : Activity() {
         val logBuilder = StringBuilder()
         fun appendLog(msg: String) {
             Log.d("NoveluaSample", msg)
-            runOnUiThread {
-                logBuilder.append(msg).append("\n\n")
-                textView.text = logBuilder.toString()
-            }
+            logBuilder.append(msg).append("\n\n")
+            textView.text = logBuilder.toString()
         }
 
-        Thread {
-            try {
-                appendLog("Starting Novelua Sample Demo...")
+        try {
+            appendLog("Starting Novelua Sample Demo...")
 
-                // 1) HTML Parsing & CSS selection using LexSoup
-                val html = """
-                    <!DOCTYPE html>
-                    <html>
-                        <head><title>Novelua Test</title></head>
-                        <body>
-                            <h1 id="main-title">Hello Novelua</h1>
-                            <p class="content">This is a   test text.</p>
-                        </body>
-                    </html>
-                """.trimIndent()
+            // 1) HTML Parsing & CSS selection using LexSoup
+            val html = """
+                <!DOCTYPE html>
+                <html>
+                    <head><title>Novelua Test</title></head>
+                    <body>
+                        <h1 id="main-title">Hello Novelua</h1>
+                        <p class="content">This is a   test text.</p>
+                    </body>
+                </html>
+            """.trimIndent()
+            
+            Parser.parse(html).use { doc ->
+                val h1 = doc.select("h1").first()
+                val titleText = h1?.text ?: "No H1"
+                appendLog("[1] LexSoup H1 Text: $titleText")
                 
-                Parser.parse(html).use { doc ->
-                    val h1 = doc.select("h1").first()
-                    val titleText = h1?.text ?: "No H1"
-                    appendLog("[1] LexSoup H1 Text: $titleText")
-                    
-                    // 2) Script execution in QuickJS and Luau using interop
-                    Runtime().use { runtime ->
-                        Context(runtime).use { context ->
-                            context.bindDocument("document", doc)
-                            context.eval("document.title").use { jsResult ->
-                                appendLog("[2] QuickJS Document Title: ${jsResult.asString()}")
-                            }
+                // 2) Script execution in QuickJS and Luau using interop
+                Runtime().use { runtime ->
+                    Context(runtime).use { context ->
+                        context.bindDocument("document", doc)
+                        context.eval("document.title").use { jsResult ->
+                            appendLog("[2] QuickJS Document Title: ${jsResult.asString()}")
                         }
                     }
-                    
-                    VM().use { vm ->
-                        vm.bindDocument("document", doc)
-                        val luauResult = vm.eval("return 'Luau Demo'")
-                        appendLog("[3] Luau Evaluation Result: $luauResult")
-                    }
-                    
-                    // 3) Fast text extraction & regex replacement using PCRE2 Regex
-                    val p = doc.select("p.content").first()
-                    val rawText = p?.text ?: ""
-                    
-                    Regex.compile("\\s+").use { pattern ->
-                        val cleanText = pattern.replaceAll(rawText, " ")
-                        appendLog("[4] Regex Cleaned Text: $cleanText")
-                    }
                 }
-
-                appendLog("✅ All Novelua Native SDK tests completed successfully!")
-
-            } catch (e: Throwable) {
-                Log.e("NoveluaSample", "Error during execution", e)
-                appendLog("❌ Error: ${e.message}\n${Log.getStackTraceString(e)}")
+                
+                VM().use { vm ->
+                    vm.bindDocument("document", doc)
+                    val luauResult = vm.eval("return 'Luau Demo'")
+                    appendLog("[3] Luau Evaluation Result: $luauResult")
+                }
+                
+                // 3) Fast text extraction & regex replacement using PCRE2 Regex
+                val p = doc.select("p.content").first()
+                val rawText = p?.text ?: ""
+                
+                Regex.compile("\\s+").use { pattern ->
+                    val cleanText = pattern.replaceAll(rawText, " ")
+                    appendLog("[4] Regex Cleaned Text: $cleanText")
+                }
             }
-        }.start()
+
+            appendLog("✅ All Novelua Native SDK tests completed successfully!")
+
+        } catch (e: Throwable) {
+            Log.e("NoveluaSample", "Error during execution", e)
+            appendLog("❌ Error: ${e.message}\n${Log.getStackTraceString(e)}")
+        }
     }
 }
