@@ -56,4 +56,5 @@ dependencies {
     implementation(project(":modules:quickjs"))
     implementation(project(":modules:luau"))
     implementation(project(":modules:interop"))
+    testImplementation(libs.junit)
 }
