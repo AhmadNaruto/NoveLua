@@ -34,7 +34,7 @@ std::string Element::Text() const {
 
 std::string Element::Html() const {
     if (!m_node) return "";
-    lexbor_str_t str = {0};
+    lexbor_str_t str = {};
     lxb_status_t status = lxb_html_serialize_deep_str(m_node, &str);
     if (status != LXB_STATUS_OK) return "";
     std::string res((const char*)str.data, str.length);
@@ -44,7 +44,7 @@ std::string Element::Html() const {
 
 std::string Element::OuterHtml() const {
     if (!m_node) return "";
-    lexbor_str_t str = {0};
+    lexbor_str_t str = {};
     lxb_status_t status = lxb_html_serialize_tree_str(m_node, &str);
     if (status != LXB_STATUS_OK) return "";
     std::string res((const char*)str.data, str.length);

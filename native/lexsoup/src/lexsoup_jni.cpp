@@ -156,7 +156,7 @@ static jstring Node_nodeName(JNIEnv* env, jobject, jlong handle) {
 static jstring Node_outerHtml(JNIEnv* env, jobject, jlong handle) {
     auto* el = reinterpret_cast<Element*>(handle);
     if (!el || !el->GetNativeNode()) return env->NewStringUTF("");
-    lexbor_str_t str = {0};
+    lexbor_str_t str = {};
     lxb_status_t status = lxb_html_serialize_tree_str(el->GetNativeNode(), &str);
     if (status != LXB_STATUS_OK) return env->NewStringUTF("");
     jstring res = env->NewStringUTF((const char*)str.data);
