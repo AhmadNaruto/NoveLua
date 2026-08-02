@@ -2,6 +2,7 @@
 #include "vm_wrapper.hpp"
 #include "table_wrapper.hpp"
 #include "function_wrapper.hpp"
+#include <luacode.h>
 #include <novelua/common/jstring_utils.hpp>
 #include <novelua/common/exceptions.hpp>
 #include <map>
@@ -134,16 +135,14 @@ static jobject GetLuaValueAsJavaObject(JNIEnv* env, lua_State* L, int index) {
         return env->NewStringUTF(lua_tostring(L, index));
     }
     if (type == LUA_TTABLE) {
-        lua_pushvalue(L, index);
-        int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+        int ref = lua_ref(L, index);
         auto* table = new Table(L, ref);
         jclass tableClass = env->FindClass("io/github/novelua/luau/Table");
         jmethodID init = env->GetMethodID(tableClass, "<init>", "(J)V");
         return env->NewObject(tableClass, init, reinterpret_cast<jlong>(table));
     }
     if (type == LUA_TFUNCTION) {
-        lua_pushvalue(L, index);
-        int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+        int ref = lua_ref(L, index);
         auto* fn = new Function(L, ref);
         jclass functionClass = env->FindClass("io/github/novelua/luau/Function");
         jmethodID init = env->GetMethodID(functionClass, "<init>", "(J)V");
@@ -175,7 +174,7 @@ static int Luau_callback_handler(lua_State* L) {
     bool needs_detach = false;
     jint get_env_res = g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
     if (get_env_res == JNI_EDETACHED) {
-        g_jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
+        g_jvm->AttachCurrentThread(&env, nullptr);
         needs_detach = true;
     }
 
@@ -295,7 +294,8 @@ static jlong VM_createTable(JNIEnv*, jobject, jlong handle) {
     if (!vm) return 0;
     lua_State* L = vm->getState();
     lua_newtable(L);
-    int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    int ref = lua_ref(L, -1);
+    lua_pop(L, 1);
     return reinterpret_cast<jlong>(new Table(L, ref));
 }
 
@@ -324,7 +324,8 @@ static jlong VM_globals(JNIEnv*, jobject, jlong handle) {
     if (!vm) return 0;
     lua_State* L = vm->getState();
     lua_pushvalue(L, LUA_GLOBALSINDEX);
-    int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    int ref = lua_ref(L, -1);
+    lua_pop(L, 1);
     return reinterpret_cast<jlong>(new Table(L, ref));
 }
 
@@ -333,7 +334,8 @@ static jlong VM_registry(JNIEnv*, jobject, jlong handle) {
     if (!vm) return 0;
     lua_State* L = vm->getState();
     lua_pushvalue(L, LUA_REGISTRYINDEX);
-    int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    int ref = lua_ref(L, -1);
+    lua_pop(L, 1);
     return reinterpret_cast<jlong>(new Table(L, ref));
 }
 
@@ -356,7 +358,7 @@ static void VM_registerCallback(JNIEnv* env, jobject, jlong handle, jstring jnam
     }
 
     lua_pushstring(L, name.c_str());
-    lua_pushcclosure(L, Luau_callback_handler, 1);
+    lua_pushcclosure(L, Luau_callback_handler, name.c_str(), 1);
     lua_setglobal(L, name.c_str());
 }
 

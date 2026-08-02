@@ -1,5 +1,6 @@
 #include "lexsoup/selector.hpp"
 #include <lexbor/dom/interfaces/element.h>
+#include <lexbor/css/css.h>
 #include <algorithm>
 #include <cctype>
 
@@ -16,7 +17,6 @@ Selector::~Selector() {
     }
 }
 
-#include <lexbor/css/css.h>
 
 static lxb_status_t find_callback(lxb_dom_node_t *node, lxb_css_selector_specificity_t spec, void *ctx) {
     auto* results = static_cast<std::vector<Element>*>(ctx);
@@ -40,7 +40,7 @@ std::vector<Element> Selector::Select(Element root, const std::string& css) {
     lxb_css_selector_list_t* list = lxb_css_selectors_parse(parser, (const lxb_char_t*)css.c_str(), css.length());
     if (list) {
         lxb_selectors_find(m_selectors, root.GetNativeNode(), list, find_callback, &results);
-        lxb_css_selector_list_destroy(list, true);
+        lxb_css_selector_list_destroy(list);
     }
 
     lxb_css_parser_destroy(parser, true);

@@ -48,7 +48,7 @@ static JSValue Qjs_callback_handler(JSContext *ctx, JSValueConst this_val, int a
     bool needs_detach = false;
     jint get_env_res = g_qjs_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
     if (get_env_res == JNI_EDETACHED) {
-        g_qjs_jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
+        g_qjs_jvm->AttachCurrentThread(&env, nullptr);
         needs_detach = true;
     }
 

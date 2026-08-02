@@ -160,7 +160,7 @@ static jstring Node_outerHtml(JNIEnv* env, jobject, jlong handle) {
     lxb_status_t status = lxb_html_serialize_tree_str(el->GetNativeNode(), &str);
     if (status != LXB_STATUS_OK) return env->NewStringUTF("");
     jstring res = env->NewStringUTF((const char*)str.data);
-    lexbor_str_destroy(&str, false);
+    lexbor_str_destroy(&str, el->GetNativeNode()->owner_document->text, false);
     return res;
 }
 

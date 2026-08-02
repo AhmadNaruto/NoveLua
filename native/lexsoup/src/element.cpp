@@ -1,6 +1,7 @@
 #include "lexsoup/element.hpp"
 #include <lexbor/html/interfaces/element.h>
 #include <lexbor/dom/interfaces/attr.h>
+#include <lexbor/dom/interfaces/document.h>
 #include <lexbor/html/serialize.h>
 
 namespace novelua::lexsoup {
@@ -37,7 +38,7 @@ std::string Element::Html() const {
     lxb_status_t status = lxb_html_serialize_deep_str(m_node, &str);
     if (status != LXB_STATUS_OK) return "";
     std::string res((const char*)str.data, str.length);
-    lexbor_str_destroy(&str, false);
+    lexbor_str_destroy(&str, m_node->owner_document->text, false);
     return res;
 }
 
@@ -47,7 +48,7 @@ std::string Element::OuterHtml() const {
     lxb_status_t status = lxb_html_serialize_tree_str(m_node, &str);
     if (status != LXB_STATUS_OK) return "";
     std::string res((const char*)str.data, str.length);
-    lexbor_str_destroy(&str, false);
+    lexbor_str_destroy(&str, m_node->owner_document->text, false);
     return res;
 }
 
