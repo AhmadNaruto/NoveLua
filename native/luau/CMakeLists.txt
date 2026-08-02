@@ -23,7 +23,7 @@ add_library(novelua_luau SHARED
 )
 
 novelua_apply_target_optimizations(novelua_luau)
-target_compile_options(novelua_luau PRIVATE -Wno-unused-parameter -Wno-unused-variable -Wno-error)
+target_compile_options(novelua_luau PRIVATE -w)
 
 target_include_directories(novelua_luau PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/luau/Common/include

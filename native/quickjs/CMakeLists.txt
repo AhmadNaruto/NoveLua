@@ -27,7 +27,7 @@ add_library(novelua_quickjs SHARED
 
 novelua_apply_target_optimizations(novelua_quickjs)
 set_target_properties(novelua_quickjs PROPERTIES C_STANDARD 17 C_EXTENSIONS ON)
-target_compile_options(novelua_quickjs PRIVATE -Wno-unused-parameter -Wno-unused-variable -Wno-sign-compare -Wno-error)
+target_compile_options(novelua_quickjs PRIVATE -w)
 
 target_include_directories(novelua_quickjs
     PRIVATE
