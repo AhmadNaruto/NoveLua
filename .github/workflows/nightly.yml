@@ -8,7 +8,17 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { os: ubuntu-latest, name: linux-x64, lib: libnovelua.so }
+          - { os: macos-latest, name: macos-arm64, lib: libnovelua.dylib }
+          - { os: windows-latest, name: windows-x64, lib: novelua.dll }
+          - { os: ubuntu-latest, name: android-arm64, lib: libnovelua.so, is_android: true, abi: arm64-v8a }
+          - { os: ubuntu-latest, name: android-arm, lib: libnovelua.so, is_android: true, abi: armeabi-v7a }
+          - { os: ubuntu-latest, name: android-x64, lib: libnovelua.so, is_android: true, abi: x86_64 }
+          - { os: ubuntu-latest, name: android-x86, lib: libnovelua.so, is_android: true, abi: x86 }
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,11 +39,28 @@ jobs:
         with:
           cmake-version: '3.25.x'
 
-      - name: Run Tests
+      - name: Build Native Library
+        run: |
+          if [ "${{ matrix.is_android }}" = "true" ]; then
+            cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake \
+                  -DANDROID_ABI=${{ matrix.abi }} \
+                  -DANDROID_PLATFORM=android-24 \
+                  -DCMAKE_BUILD_TYPE=Release \
+                  -B build-android \
+                  -S .
+            cmake --build build-android
+            mkdir -p build/novelua
+            cp build-android/src/main/cpp/luau/libnovelua.so build/novelua/
+          else
+            ./gradlew compileNatives --info
+          fi
+
+      - name: Run Tests (Host Only)
+        if: matrix.is_android != 'true'
         run: ./gradlew test --info
 
       - name: Upload Native Binary Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: libnovelua-linux-x64
-          path: build/novelua/libnovelua.so
+          name: novelua-native-${{ matrix.name }}
+          path: build/novelua/${{ matrix.lib }}
