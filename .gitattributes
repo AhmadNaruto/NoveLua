@@ -1,0 +1,17 @@
+# Set default behavior to automatically handle line endings
+* text=auto
+
+# Standardize line endings to LF for code files
+*.kt text eol=lf
+*.kts text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.cmake text eol=lf
+CMakeLists.txt text eol=lf
+
+# Exclude compiled files or binary assets from line ending conversion
+*.jar binary
+*.so binary
+*.a binary

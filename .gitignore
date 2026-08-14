@@ -1,0 +1,27 @@
+# Gradle build directories
+.gradle/
+build/
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# CMake build directories & cache
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# Local built native binaries
+*.so
+*.a
+*.o
+*.dylib
+*.dll
+
+# OS files
+.DS_Store
