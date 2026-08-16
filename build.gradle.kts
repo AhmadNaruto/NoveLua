@@ -64,9 +64,13 @@ android {
 
     testOptions {
         unitTests.all {
-            useJUnitPlatform()
-            dependsOn(compileNatives)
-            systemProperty("java.library.path", file("${layout.buildDirectory.get()}/novelua").absolutePath)
+            val testTask = this as? org.gradle.api.tasks.testing.Test
+                ?: (it as? org.gradle.api.tasks.testing.Test)
+            testTask?.apply {
+                useJUnitPlatform()
+                dependsOn(compileNatives)
+                systemProperty("java.library.path", file("${layout.buildDirectory.get()}/novelua").absolutePath)
+            }
         }
     }
 }
