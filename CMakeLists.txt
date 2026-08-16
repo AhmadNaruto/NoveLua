@@ -40,23 +40,19 @@ target_link_libraries(novelua PRIVATE
 
 target_include_directories(novelua PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp
+    ${LUAU_DIR}/Common/include
+    ${LUAU_DIR}/Ast/include
+    ${LUAU_DIR}/Bytecode/include
+    ${LUAU_DIR}/Bytecode/src
+    ${LUAU_DIR}/Compiler/include
+    ${LUAU_DIR}/CodeGen/include
+    ${LUAU_DIR}/CodeGen/src
+    ${LUAU_DIR}/Inliner/include
+    ${LUAU_DIR}/VM/src
 )
 if(NOT ANDROID)
     target_include_directories(novelua PRIVATE ${JNI_INCLUDE_DIRS})
 endif()
-
-# Export macros
-if (MSVC)
-    target_compile_definitions(novelua PRIVATE
-            "LUACODE_API=extern \"C\" __declspec(dllexport)"
-            "LUACODEGEN_API=extern \"C\" __declspec(dllexport)"
-            "LUAJITINLINER_API=extern \"C\" __declspec(dllexport)")
-else ()
-    target_compile_definitions(novelua PRIVATE
-            "LUACODE_API=extern \"C\" __attribute__((visibility(\"default\")))"
-            "LUACODEGEN_API=extern \"C\" __attribute__((visibility(\"default\")))"
-            "LUAJITINLINER_API=extern \"C\" __attribute__((visibility(\"default\")))")
-endif ()
 
 # Compile and Link flags for small binary size
 if (NOT MSVC)
