@@ -39,7 +39,7 @@ jobs:
                 -S .
           cmake --build build-android
           mkdir -p build/novelua
-          cp build-android/src/main/cpp/luau/libnovelua.so build/novelua/
+          cp build-android/libnovelua.so build/novelua/
 
       - name: Build & Run Host Tests
         run: ./gradlew testDebugUnitTest
