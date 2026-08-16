@@ -4,7 +4,9 @@ project(novelua C CXX)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(JNI REQUIRED)
+if(NOT ANDROID)
+    find_package(JNI REQUIRED)
+endif()
 
 set(LUAU_EXTERN_C ON CACHE BOOL "Force Luau to compile in C mode" FORCE)
 set(LUAU_BUILD_SHARED ON CACHE BOOL "Force Luau to build shared libraries" FORCE)
@@ -25,8 +27,10 @@ target_sources(Luau.VM PRIVATE
 
 target_include_directories(Luau.VM PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp
-    ${JNI_INCLUDE_DIRS}
 )
+if(NOT ANDROID)
+    target_include_directories(Luau.VM PRIVATE ${JNI_INCLUDE_DIRS})
+endif()
 
 # Helper function to absorb sources of dependencies into Luau.VM
 function(luaujava_absorb target)

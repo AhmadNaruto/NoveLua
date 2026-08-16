@@ -1,14 +1,6 @@
 plugins {
-    kotlin("jvm") version "2.0.0"
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation("org.jetbrains:annotations:24.0.0")
-    testImplementation(kotlin("test"))
+    id("com.android.library") version "8.7.3"
+    kotlin("android") version "2.0.0"
 }
 
 val compileNatives = tasks.register("compileNatives") {
@@ -41,10 +33,45 @@ val compileNatives = tasks.register("compileNatives") {
     }
 }
 
-tasks.test {
-    dependsOn(compileNatives)
-    useJUnitPlatform()
-    
-    // Set library path for JNI loading
-    systemProperty("java.library.path", file("${layout.buildDirectory.get()}/novelua").absolutePath)
+android {
+    namespace = "io.github.novela.luau"
+    compileSdk = 34
+
+    defaultConfig {
+        minSdk = 21
+
+        externalNativeBuild {
+            cmake {
+                arguments("-DANDROID_STL=c++_shared")
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlin {
+        jvmToolchain(17)
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("CMakeLists.txt")
+        }
+    }
+
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+            dependsOn(compileNatives)
+            systemProperty("java.library.path", file("${layout.buildDirectory.get()}/novelua").absolutePath)
+        }
+    }
+}
+
+dependencies {
+    implementation("org.jetbrains:annotations:24.0.0")
+    testImplementation(kotlin("test"))
 }
